@@ -1,0 +1,47 @@
+diff -Naur opus-1.3.1/include/opus_defines.h opus112_patchv2/include/opus_defines.h
+--- opus-1.3.1/include/opus_defines.h	2016-01-12 12:17:00.000000000 -0500
++++ opus112_patchv2/include/opus_defines.h	2017-07-17 11:17:18.431417174 -0400
+@@ -173,6 +173,7 @@
+ #define OPUS_SET_PHASE_INVERSION_DISABLED_REQUEST 4046
+ #define OPUS_GET_PHASE_INVERSION_DISABLED_REQUEST 4047
+ #define OPUS_GET_IN_DTX_REQUEST              4049
++#define OPUS_GET_PREVSIGNALTYPE_REQUEST 4051
+ 
+ /* Don't use 4045, it's already taken by OPUS_GET_GAIN_REQUEST */
+ 
+@@ -681,6 +682,8 @@
+   */
+ #define OPUS_GET_SAMPLE_RATE(x) OPUS_GET_SAMPLE_RATE_REQUEST, __opus_check_int_ptr(x)
+ 
++#define OPUS_GET_PREVSIGNALTYPE(x) OPUS_GET_PREVSIGNALTYPE_REQUEST, __opus_check_int_ptr(x)
++
+ /**@}*/
+ 
+ /** @defgroup opus_decoderctls Decoder related CTLs
+diff -Naur opus-1.3.1/src/opus_encoder.c opus112_patchv2/src/opus_encoder.c
+--- opus-1.3.1/src/opus_encoder.c	2016-01-12 12:16:54.000000000 -0500
++++ opus112_patchv2/src/opus_encoder.c	2017-07-17 11:17:54.075393846 -0400
+@@ -2509,6 +2509,17 @@
+            ret = celt_encoder_ctl(celt_enc, CELT_GET_MODE(value));
+         }
+         break;
++        case OPUS_GET_PREVSIGNALTYPE_REQUEST:
++        {
++            opus_int32 *value = va_arg(ap, opus_int32*);
++            if (!value)
++            {
++               goto bad_arg;
++            }
++            silk_encoder *silk_enc = (silk_encoder*)((void*)st+st->silk_enc_offset);
++            *value = silk_enc->state_Fxx[0].sCmn.prevSignalType;
++        }
++        break;
+         default:
+             /* fprintf(stderr, "unknown opus_encoder_ctl() request: %d", request);*/
+             ret = OPUS_UNIMPLEMENTED;
+diff -Naur opus-1.3.1/src/opus_encoder.c opus112_patchv2/src/opus_encoder.c
+--- opus-1.3.1/src/opus_encoder.c	2016-01-12 12:16:54.000000000 -0500
++++ opus112_patchv2/src/opus_encoder.c	2017-07-17 11:17:54.075393846 -0400
+@@ -2775,1 +2775,1 @@
+-            silk_encoder *silk_enc = (silk_encoder*)((void*)st+st->silk_enc_offset);
++            silk_encoder *silk_enc = (silk_encoder*)((char*)st+st->silk_enc_offset);

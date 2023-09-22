@@ -1,0 +1,38 @@
+UNAME=$(shell uname)
+OPUS_VERSION=1.3.1
+OPUSSRC=./libopus-build-scripts/opus-$(OPUS_VERSION)
+CFLAGS=-fPIC -Wall -I$(OPUSSRC)/include -I$(OPUSSRC)/src -I$(OPUSSRC)/celt -I$(OPUSSRC)/silk -I$(OPUSSRC)/silk/float -std=c99
+LDLIBS=-lopus
+ifeq ($(UNAME),Darwin)
+  LIBEXT=a
+  LD=ar
+else
+  LIBEXT=so
+  LD=ar
+endif
+
+SRC_DIR=src
+OBJ_DIR=obj
+SRC_FILES=$(filter-out $(SRC_DIR)/opusvadjava.c, $(wildcard $(SRC_DIR)/*.c))
+OBJ_FILES=$(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(SRC_FILES))
+
+ # Make sure the object file directory exists
+$(shell mkdir -p $(OBJ_DIR))
+
+
+.DEFAULT: libopusvad.$(LIBEXT)
+
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
+	$(CC) -c -o $@ $< $(CFLAGS)
+
+libopusvad.$(LIBEXT): $(OBJ_FILES)
+	$(LD) -r $@ $^
+
+clean:
+	rm -f *.$(LIBEXT) obj/*.o
+	rm -rf doc
+
+doc:
+	doxygen
+
+.PHONY: clean doc
