@@ -11,6 +11,7 @@
 
 # generated files
 bin/
+obj/
 gen/
 out/
 doc/
@@ -34,9 +35,9 @@ opus-*
 *.dll
 *.lib
 *.exp
-*.dylib
 *.pcm
 *.adpcm
+*.dylib
 *.mp3
 *.wav
 *.log
