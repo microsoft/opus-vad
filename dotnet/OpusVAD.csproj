@@ -1,0 +1,40 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <None Update="runtimes/osx-x64/native/libopusvad.dylib">
+      <Pack>true</Pack>
+      <PackagePath>runtimes/osx-x64/native/</PackagePath>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="runtimes/win-x64/native/libopusvad.dll">
+      <Pack>true</Pack>
+      <PackagePath>runtimes/win-x64/native/</PackagePath>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="README.md">
+      <Pack>true</Pack>
+      <PackagePath>README.md</PackagePath>
+    </None>
+  </ItemGroup>
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <Version>1.3.2</Version>
+    <metadata>
+      <id>OpusVAD</id>
+      <version>1.3.2</version>
+      <authors>chrisleblanc@microsoft.com</authors>
+      <owners>Chris LeBlanc</owners>
+      <requireLicenseAcceptance>false</requireLicenseAcceptance>
+      <description>Package that includes .NET code and Opus library voice activity detection.</description>
+      <tags>Opus audio codec C#</tags>
+      <readme>README.md</readme>
+      <license type="file">LICENSE</license>
+    </metadata>
+  
+</PropertyGroup>
+
+</Project>
