@@ -3,8 +3,29 @@ Flat profile:
 Each sample counts as 0.01 seconds.
   %   cumulative   self              self     total           
  time   seconds   seconds    calls  Ts/call  Ts/call  name    
-100.00      0.01     0.01                             silk_NSQ_del_dec_c
-  0.00      0.01     0.00        1     0.00     0.00  opus_vad_sos
+ 48.57      0.51     0.51                             silk_NSQ_del_dec_c
+ 11.43      0.63     0.12                             silk_inner_product_FLP
+ 10.48      0.74     0.11                             silk_NLSF_del_dec_quant
+  5.71      0.80     0.06                             silk_LPC_analysis_filter_FLP
+  2.86      0.83     0.03                             silk_A2NLSF
+  2.86      0.86     0.03                             silk_pitch_analysis_core_FLP
+  1.90      0.88     0.02                             ec_enc_icdf
+  1.90      0.90     0.02                             opus_encode_native
+  1.90      0.92     0.02                             silk_burg_modified_FLP
+  1.90      0.94     0.02                             silk_residual_energy_FLP
+  0.95      0.95     0.01                             main
+  0.95      0.96     0.01                             opus_encoder_ctl
+  0.95      0.97     0.01                             silk_LPC_inverse_pred_gain_c
+  0.95      0.98     0.01                             silk_NLSF_VQ
+  0.95      0.99     0.01                             silk_VAD_Init
+  0.95      1.00     0.01                             silk_VQ_WMat_EC_c
+  0.95      1.01     0.01                             silk_ana_filt_bank_1
+  0.95      1.02     0.01                             silk_encode_pulses
+  0.95      1.03     0.01                             silk_encode_signs
+  0.95      1.04     0.01                             silk_process_NLSFs_FLP
+  0.95      1.05     0.01                             silk_resampler_down2
+  0.00      1.05     0.00      115     0.00     0.00  opus_vad_eos
+  0.00      1.05     0.00      115     0.00     0.00  opus_vad_sos
 
  %         the percentage of the total running time of the
 time       program used by this function.
@@ -42,14 +63,77 @@ notice and this notice are preserved.
 		     Call graph (explanation follows)
 
 
-granularity: each sample hit covers 4 byte(s) for 100.00% of 0.01 seconds
+granularity: each sample hit covers 4 byte(s) for 0.95% of 1.05 seconds
 
 index % time    self  children    called     name
                                                  <spontaneous>
-[1]    100.0    0.01    0.00                 silk_NSQ_del_dec_c [1]
+[1]     48.6    0.51    0.00                 silk_NSQ_del_dec_c [1]
 -----------------------------------------------
-                0.00    0.00       1/1           _notify_callback [324]
-[2]      0.0    0.00    0.00       1         opus_vad_sos [2]
+                                                 <spontaneous>
+[2]     11.4    0.12    0.00                 silk_inner_product_FLP [2]
+-----------------------------------------------
+                                                 <spontaneous>
+[3]     10.5    0.11    0.00                 silk_NLSF_del_dec_quant [3]
+-----------------------------------------------
+                                                 <spontaneous>
+[4]      5.7    0.06    0.00                 silk_LPC_analysis_filter_FLP [4]
+-----------------------------------------------
+                                                 <spontaneous>
+[5]      2.9    0.03    0.00                 silk_A2NLSF [5]
+-----------------------------------------------
+                                                 <spontaneous>
+[6]      2.9    0.03    0.00                 silk_pitch_analysis_core_FLP [6]
+-----------------------------------------------
+                                                 <spontaneous>
+[7]      1.9    0.02    0.00                 ec_enc_icdf [7]
+-----------------------------------------------
+                                                 <spontaneous>
+[8]      1.9    0.02    0.00                 opus_encode_native [8]
+-----------------------------------------------
+                                                 <spontaneous>
+[9]      1.9    0.02    0.00                 silk_burg_modified_FLP [9]
+-----------------------------------------------
+                                                 <spontaneous>
+[10]     1.9    0.02    0.00                 silk_residual_energy_FLP [10]
+-----------------------------------------------
+                                                 <spontaneous>
+[11]     1.0    0.01    0.00                 main [11]
+-----------------------------------------------
+                                                 <spontaneous>
+[12]     1.0    0.01    0.00                 opus_encoder_ctl [12]
+-----------------------------------------------
+                                                 <spontaneous>
+[13]     1.0    0.01    0.00                 silk_LPC_inverse_pred_gain_c [13]
+-----------------------------------------------
+                                                 <spontaneous>
+[14]     1.0    0.01    0.00                 silk_NLSF_VQ [14]
+-----------------------------------------------
+                                                 <spontaneous>
+[15]     1.0    0.01    0.00                 silk_VAD_Init [15]
+-----------------------------------------------
+                                                 <spontaneous>
+[16]     1.0    0.01    0.00                 silk_VQ_WMat_EC_c [16]
+-----------------------------------------------
+                                                 <spontaneous>
+[17]     1.0    0.01    0.00                 silk_ana_filt_bank_1 [17]
+-----------------------------------------------
+                                                 <spontaneous>
+[18]     1.0    0.01    0.00                 silk_encode_pulses [18]
+-----------------------------------------------
+                                                 <spontaneous>
+[19]     1.0    0.01    0.00                 silk_encode_signs [19]
+-----------------------------------------------
+                                                 <spontaneous>
+[20]     1.0    0.01    0.00                 silk_process_NLSFs_FLP [20]
+-----------------------------------------------
+                                                 <spontaneous>
+[21]     1.0    0.01    0.00                 silk_resampler_down2 [21]
+-----------------------------------------------
+                0.00    0.00     115/115         _notify_callback [324]
+[22]     0.0    0.00    0.00     115         opus_vad_eos [22]
+-----------------------------------------------
+                0.00    0.00     115/115         _notify_callback [324]
+[23]     0.0    0.00    0.00     115         opus_vad_sos [23]
 -----------------------------------------------
 
  This table describes the call tree of the program, and was sorted by
@@ -142,4 +226,11 @@ notice and this notice are preserved.
 
 Index by function name
 
-   [2] opus_vad_sos            [1] silk_NSQ_del_dec_c (NSQ_del_dec.c)
+   [7] ec_enc_icdf (entenc.c) [13] silk_LPC_inverse_pred_gain_c (LPC_inv_pred_gain.c) [18] silk_encode_pulses (encode_pulses.c)
+  [11] main                   [14] silk_NLSF_VQ (NLSF_VQ.c) [19] silk_encode_signs (code_signs.c)
+   [8] opus_encode_native (opus_encoder.c) [3] silk_NLSF_del_dec_quant (NLSF_del_dec_quant.c) [2] silk_inner_product_FLP (inner_product_FLP.c)
+  [12] opus_encoder_ctl        [1] silk_NSQ_del_dec_c (NSQ_del_dec.c) [6] silk_pitch_analysis_core_FLP (pitch_analysis_core_FLP.c)
+  [22] opus_vad_eos           [15] silk_VAD_Init (VAD.c)  [20] silk_process_NLSFs_FLP (wrappers_FLP.c)
+  [23] opus_vad_sos           [16] silk_VQ_WMat_EC_c (VQ_WMat_EC.c) [21] silk_resampler_down2 (resampler_down2.c)
+   [5] silk_A2NLSF (A2NLSF.c) [17] silk_ana_filt_bank_1 (ana_filt_bank_1.c) [10] silk_residual_energy_FLP (residual_energy_FLP.c)
+   [4] silk_LPC_analysis_filter_FLP (LPC_analysis_filter_FLP.c) [9] silk_burg_modified_FLP (burg_modified_FLP.c)

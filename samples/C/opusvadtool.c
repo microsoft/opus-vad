@@ -58,6 +58,7 @@ void print_usage(char **argv) {
     printf("Usage: %s [-h] -f <infile> [-s sos] [-e eos] [-c complexity] [-b bit_rate_type] [-t speech sensitivity threshold] [-a] [-n]\n", argv[0]);
     printf("Input file must be 16000 Hz 16 bit signed little-endian PCM mono\n");
     printf("If <infile> is \"-\", input is read from standard input\n");
+    printf("-w \t skip wav file header (44 bytes). Default: FALSE\n");
     printf("-s \t start of speech window in ms. Default: 220\n");
     printf("-e \t end of speech window in ms. Default: 900\n");
     printf("-c \t opus vad encoding complexity level (0-10). Default: 3\n");
@@ -85,7 +86,7 @@ int main(int argc, char **argv)
     int use_adpcm = 0;
     int adpcm_high_nibble_first = 0;
     int sos = 220;
-    int eos = 900;
+    int eos = 600;
     int complexity = 3;
     int bit_rate_type = 1;
     int sensitivity = 20;
@@ -95,14 +96,24 @@ int main(int argc, char **argv)
     int once = 1;
     short backup_buffer[20][320]; // about 400ms
     short bb_index = 0;
-
+    int skip_wav_header = 0;
+    int batch_mode = 0;
     int file_num = 0;
     FILE *audioFile = NULL;
-    char *fName = "speech_%d.pcm";
-
+    FILE *bf = NULL;
+    char *fName = "./speech_%d.pcm";
+    char audioFileName[256];
+    int running = 1;
     int option;
-    while((option = getopt(argc, argv, ":f:s:e:c:b:t:l:han")) != -1){
+    unsigned long audioMS = 0;
+    while((option = getopt(argc, argv, ":f:s:e:c:b:t:l:hanwm")) != -1){
         switch(option){
+            case 'm':
+                batch_mode = 1;
+                break;
+            case 'w':
+                skip_wav_header = 1;
+                break;
             case 'f':
                 input = optarg;
                 break;
@@ -166,78 +177,145 @@ int main(int argc, char **argv)
         opus_vad_eos
     };
     startclock = clock();
-    vad = opusvad_create(&error, &opts);
+    if (use_adpcm) {
+        printf("Using ADPCM\n");
+        vad = opusvad_create_opt(&error, &opts, 10);
+    } else {
+        printf("Using PCM\n");
+        vad = opusvad_create(&error, &opts);
+    }
     if (error != OPUSVAD_OK)
     {
         printf("Error with opusvad_create: %d\n", error);
         return 2;
     }
-    frame_size = use_adpcm ? 96*5 : opusvad_get_frame_size(vad);
+    frame_size = use_adpcm ? 80 /*96*2*/ : opusvad_get_frame_size(vad);
 
-    fd = (!strncmp(input, "-", 2)) ? stdin : fopen(input, "rb");
-    inbuf = (use_adpcm) ? malloc(frame_size / 2) : malloc(frame_size * INSAMPLESIZE);
-    char name[256];
+    if (batch_mode) {
+        bf = fopen(input, "r");
+        fgets(audioFileName, 256, bf); 
+        audioFileName[strlen(audioFileName)-1] = '\0';
+        printf("Opened File %s\n", audioFileName);
+        fd = fopen(audioFileName, "rb");
+    } else {
+        printf("Opened File %s\n", input);
+        fd = (!strncmp(input, "-", 2)) ? stdin : fopen(input, "rb");
+    }
+    printf("Open fd %p\n", fd);
+    printf("Frame size: %d\n", frame_size);
+    inbuf = (use_adpcm) ? malloc(frame_size) : malloc(frame_size * INSAMPLESIZE);
 
-    while (!lastpacket)
+    if (skip_wav_header) {
+        printf("Skipping wav header\n");
+        fread(inbuf, 1, 44, fd);
+    }
+
+    static char name[256];
+
+    while (running)
     {
-        read = (use_adpcm) ? fread(inbuf, 1, frame_size / 2, fd) : fread(inbuf, INSAMPLESIZE, frame_size, fd);
-        if (feof(fd))
+        lastpacket = 0;
+    
+        while (!lastpacket)
         {
-            lastpacket = 1;
-            if (read == 0) {
-                break;
-            }
-        }
-
-        if( use_adpcm == 1 )
-            error = opusvad_process_audio_adpcm(vad, (unsigned char*)inbuf, read * 2, adpcm_high_nibble_first);
-        else
-            error = opusvad_process_audio(vad, (short*)inbuf, read / INSAMPLESIZE);
-
-        memcpy(backup_buffer[bb_index++], inbuf, read*INSAMPLESIZE);
-        if (bb_index == 20) {
-            bb_index = 0;
-        }
-        if (g_sos > 0) {
-            if (once) {
-                sprintf(name, fName, file_num++);
-                printf("Opened File %s\n", name);
-                printf("\n\n");
-                audioFile = fopen(name, "wb");
-
-                fwrite(backup_buffer[bb_index], INSAMPLESIZE, 320*(20-bb_index), audioFile);
-                fwrite(backup_buffer[0], INSAMPLESIZE, 320*bb_index, audioFile);
-                once = 0;
-            }
-            fwrite(inbuf, INSAMPLESIZE, read, audioFile);
-        }
-
-        if (g_eos != 0 ) {
-            fclose(audioFile);
+            read = (use_adpcm) ? fread(inbuf, 1, frame_size/2, fd) : fread(inbuf, INSAMPLESIZE, frame_size, fd);
+            if (feof(fd))
+            {
+                lastpacket = 1;
                 opusvad_destroy(vad);
                 vad = opusvad_create(&error, &opts);
                 bb_index = g_sos = g_eos = 0;
                 once = 1;
                 for(int z=0;z<20;z++)
                     memset(backup_buffer[z], 0, 320 * sizeof(backup_buffer[0][0]));
-        }
-        if (error != OPUSVAD_OK)
-        {
-            printf("Error with opusvad_process_audio: %d\n", error);
-            return 3;
-        }
-    }
-    fclose(audioFile);
-    endclock = clock();
-    printf("Time: %.4f seconds\n", (double)(endclock - startclock) / CLOCKS_PER_SEC);
-    if (log_file != NULL) {
-        fprintf(log_file, "%s,%ld,%ld\n",input,g_sos,g_eos);
-        fclose(log_file);
-    }
+                printf("End of file\n");
+                    break;
+            }
 
+            if( use_adpcm == 1 ) {
+                error = opusvad_process_audio_adpcm(vad, (unsigned char*)inbuf, read, adpcm_high_nibble_first);
+                audioMS += 10; // 20ms per frame
+            } else {
+                error = opusvad_process_audio(vad, (short*)inbuf, read / INSAMPLESIZE);
+                audioMS += 20; // 20ms per frame
+            }
+            // printf(".");
+            memcpy(backup_buffer[bb_index++], inbuf, read*INSAMPLESIZE);
+            if (bb_index == 20) {
+                bb_index = 0;
+            }
+            if (g_sos > 0) {
+                if (once) {
+                    sprintf(name, fName, file_num++);
+                    printf("Opened File %s\n", name);
+                    audioFile = fopen(name, "wb");
+                    printf("Open fd %p\n", audioFile);
+
+                    //fwrite(backup_buffer[bb_index], INSAMPLESIZE, 320*(20-bb_index), audioFile);
+                    fwrite(backup_buffer[0], INSAMPLESIZE, 320*bb_index, audioFile);
+                    once = 0;
+                }
+                fwrite(inbuf, INSAMPLESIZE, read, audioFile);
+            }
+
+            if (g_eos != 0 ) {
+                    printf("found eos %lu\n", g_eos);
+                    if (audioFile != NULL) {
+                        fclose(audioFile);
+                        audioFile = NULL;
+                    }
+                    opusvad_destroy(vad);
+                    vad = opusvad_create(&error, &opts);
+                    bb_index = g_sos = g_eos = 0;
+                    once = 1;
+                    for(int z=0;z<20;z++)
+                        memset(backup_buffer[z], 0, 320 * sizeof(backup_buffer[0][0]));
+                    lastpacket = 1;
+            }
+            if (error != OPUSVAD_OK)
+            {
+                printf("Error with opusvad_process_audio: %d\n", error);
+                return 3;
+            }
+        }
+        if (audioFile != NULL) {
+            fclose(audioFile);
+            audioFile = NULL;
+        }
+        endclock = clock();
+        printf("Time: %.4f seconds\n", (double)(endclock - startclock) / CLOCKS_PER_SEC);
+        if (log_file != NULL) {
+            fprintf(log_file, "%s,%ld,%ld\n",input,g_sos,g_eos);
+            fclose(log_file);
+        }
+
+        if (batch_mode) {
+            if (fgets(audioFileName, 256, bf) == NULL) {
+                running = 0;
+            } else {
+                audioFileName[strlen(audioFileName)-1] = '\0';
+                printf("Opened File %s\n", audioFileName);
+                fd = fopen(audioFileName, "rb");
+                if (skip_wav_header) {
+                    printf("Skipping wav header\n");
+                    fread(inbuf, 1, 44, fd);
+                    if (feof(fd)) {
+                        break;
+                    }
+                }
+                lastpacket = 0;
+                g_sos = 0;
+                g_eos = 0;
+                startclock = clock();
+            }
+        } else {
+            break;
+        }
+    }
     fclose(fd);
     free(inbuf);
+    free(ctx);
     opusvad_destroy(vad);
-
+    printf("total audio time: %lu\n", audioMS);
     return 0;
 }

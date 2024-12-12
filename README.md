@@ -62,9 +62,24 @@ And because the raw pcm audio has been encoded to opus to generate the VAD class
 
 The opusvad library has been tested and considered compatible with linux, Mac, Android, and iOS.
 
-* The library is designed to use the Opus Library in "narrowband", so CPU usage fits roughly 40MHz or 2% of a 2GHz capturing
+* Performance profiling was done with 130 audio files detecting at total of 129 start of speech event and 115 end of speech events processing a total of 403.86 seconds of PCM audio 
+
+* ADPCM performance was measured using the same 130 source files converted to 4bit ADPCM (slightly lossy) detecting 130 start of speech and only 96 end of speech events while processing slightly more 595.75 seconds of ADPCM audio
+
+* For PCM file processing the total callgrind instructions were 9925660177 showing about 24.577 MHz of CPU usage
+
+* When processing the same audio files in ADPCM format the total callgrind instructions were 31157750338 showing about 52.3 MHz of CPU usage
+
+* The VAD library is designed to use the Opus Library in "narrowband", so CPU usage fits roughly 40MHz or 2% of a 2GHz capturing
 * CPU utilization is ~.02 seconds per 1 second of audio
 * Memory utilization requires a maximum of 50KB per core
+
+* The sizes when built for Ubuntu with -O0 are as follows:
+
+|   text  |  data  |   bss  |   dec  |   hex   |  filename
+|---------|--------|--------|--------|---------|-----------
+| 338679  |  2156  |   320  | 341155 |  534a3  |  ./opusvadtool
+
 
 In addition, here are links to the Opus codec specification that detail it's computational requirements:
 
