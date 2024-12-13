@@ -60,25 +60,26 @@ And because the raw pcm audio has been encoded to opus to generate the VAD class
 
 ### Library Performance
 
-The opusvad library has been tested and considered compatible with linux, Mac, Android, and iOS.
+The opusvad library has been tested and considered compatible with linux, Mac, Android, iOS, JNI Java, Windows and dotnet.
 
-* Performance profiling was done with 130 audio files detecting at total of 129 start of speech event and 115 end of speech events processing a total of 403.86 seconds of PCM audio 
-
-* ADPCM performance was measured using the same 130 source files converted to 4bit ADPCM (slightly lossy) detecting 130 start of speech and only 96 end of speech events while processing slightly more 595.75 seconds of ADPCM audio
-
-* For PCM file processing the total callgrind instructions were 9925660177 showing about 24.577 MHz of CPU usage
-
-* When processing the same audio files in ADPCM format the total callgrind instructions were 31157750338 showing about 52.3 MHz of CPU usage
+* The library has been tested with the following audio formats:
+    * 16kHz 16bit signed little-endian PCM mono
+    * 16kHz 4bit IMA-ADPCM mono
 
 * The VAD library is designed to use the Opus Library in "narrowband", so CPU usage fits roughly 40MHz or 2% of a 2GHz capturing
+    * For PCM file processing the total instructions used were about 30 MHz of CPU usage
+    * When processing the same audio files in ADPCM format the total instructions used were 60 MHz of CPU usage
 * CPU utilization is ~.02 seconds per 1 second of audio
 * Memory utilization requires a maximum of 50KB per core
 
-* The sizes when built for Ubuntu with -O0 are as follows:
+* The footprint when built for Ubuntu with optimization -O0 is as follows:
 
-|   text  |  data  |   bss  |   dec  |   hex   |  filename
-|---------|--------|--------|--------|---------|-----------
-| 338679  |  2156  |   320  | 341155 |  534a3  |  ./opusvadtool
+|   text  |  data  |   bss  |  filename
+|---------|--------|--------|-----------------------------------------------------------------
+| 338679  |  2156  |   320  |  opusvadtool    (statically linked tool) 
+| 372017  |  2240  |     8  |  libopus.so     (patched opus library)
+| 12367   |  660   |    16  |  libopusvad.so  (VAD wrapper library)
+
 
 
 In addition, here are links to the Opus codec specification that detail it's computational requirements:
